@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="robots" content="noindex, nofollow">
+        
+        <title>Teste SMV - usando JavaScript</title>
+   
+    </head>
+
+    <body>
+        <p>
+            <h1>
+                <h4>Demo</h4>
+                <p>Informação sobre a sua conexão :</p>
+                <p>
+                <div id="demo-container">
+                    <div><label><b>Network Type: </b></label><span id="network-type"></span></div>
+                    <div><label>Cellular Network Technology: </label><span id="effective-network-type"></span></div>
+                    <div><label>Current Downlink Speed: </label><span id="downlink-speed"></span></div>
+                    <div><label>Max Downlink Speed: </label><span id="max-downlink-speed"></span></div>
+                    <div><label>Round Trip Time: </label><span id="rtt-time"></span></div>
+                </div>
+                </p>
+                <form id="myForm">
+                    <b>
+                    <label for="myMSISDN">Numero a validar:</label>
+                    <input id="msisdn" name="msisdn" value="5521981135356" style="font-size:50" />
+                    <input id="buttonOk" type="submit" value="OK!" style="font-size:50; pxheight:60px; width:100px" />
+                    </b>
+                </form>
+            </h1>
+        </p>
+        <div><p><b>Resposta chamada API (Token): <label id="Resposta">...</label></b></p></div>
+        <div><p><b>Resultado consulta Token: <label id="Resultado">...</label></b></p></div>
+        <div><p><b>Tempo total da consulta: <label id="Tempo">...</label></b></p></div>
+        
+        
+        <script>
+                var net_type = navigator.connection.type;
+                //This network type will be one of following values : bluetooth, cellular, ethernet, none, wifi, wimax, other and unknown.
+                
+                //var effective_type = navigator.connection.effectiveType;
+                //This network type will be one of following values : slow-2g, 2g, 3g and 4g.
+                
+                //var downlink_max = navigator.connection.downlinkMax;
+                //maximum downlink speed of the network technology as megabits per second (Mb/s)
+
+                //var downlink = navigator.connection.downlink;
+                //effective real-time downlink speed experienced by the user. It is given in Mb/s
+
+                //var rtt = navigator.connection.rtt;
+                function updateNetInfo(){
+                    if(navigator.connection === undefined) {
+                        document.querySelector("#demo-container").innerHTML = 'Browser não suporta essa função. Tente com a última versão do Chrome';
+                    }
+                    else {
+                        net_type = navigator.connection.type;
+                        document.querySelector("#network-type").innerHTML = (net_type === undefined ? '<em><b>unknown</b></em>' : '<em><b>'+net_type+'</em></b>');
+                        document.querySelector("#effective-network-type").innerHTML = (navigator.connection.effectiveType === undefined ? '<em>unknown</em>' : navigator.connection.effectiveType);
+                        document.querySelector("#downlink-speed").innerHTML = (navigator.connection.downlink === undefined ? '<em>unknown</em>' : navigator.connection.downlink + ' mbps');
+                        document.querySelector("#max-downlink-speed").innerHTML = (navigator.connection.downlinkMax === undefined ? '<em>unknown</em>' : navigator.connection.downlinkMax + ' mbps');
+                        document.querySelector("#rtt-time").innerHTML = (navigator.connection.rtt === undefined ? '<em>unknown</em>' : navigator.connection.rtt + ' ms');
+                        if (net_type === undefined || net_type != "cellular") {
+                            document.querySelector("#buttonOk").disabled = true;
+                            document.getElementById('Resposta').innerHTML="PRECISA ESTAR CONECTADO VIA CELULAR PARA CONSULTAR!!!";
+                            document.getElementById('Resposta').style.backgroundColor = "red";
+                        } else {
+                            document.querySelector("#buttonOk").disabled = false;
+                            document.getElementById('Resposta').innerHTML="...";
+                            document.getElementById('Resposta').style.backgroundColor = "white";
+                        }
+                    }
+                }
+
+                navigator.connection.addEventListener('change', () => {
+	            // network change
+                    updateNetInfo();
+
+                });
+
+                window.addEventListener("load", () => {
+                    updateNetInfo();    
+                function sendData() {
+                    const startTime = Date.now();
+                    const XHR = new XMLHttpRequest();
+
+                    // Bind the FormData object and the form element
+                    const FD = new FormData(form);
+                    var rToken = new String;
+
+                    console.log("FD: "+FD);
+                    // Define what happens on successful data submission
+                    XHR.addEventListener("load", (event) => {
+                    rToken = event.target.responseText;
+                    //alert(event.target.responseText);
+                    document.getElementById('Resposta').innerHTML=rToken;
+
+                    // Agora vamos chamar a página que vai nos dar a resposta da InfoBip para o Token
+                    console.log("Token: "+rToken);
+                    const XHR2 = new XMLHttpRequest();
+
+                    //const data2 = JSON.stringify({ "token": rToken});
+                    const data2 = "token="+rToken;
+                    console.log("data2: "+data2);
+                    //const data2 = "token="+rToken;
+                    var rStatus = new String;
+                    XHR2.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            rStatus = this.responseText;
+                            console.log("Resultado: "+rStatus);
+                            document.getElementById("Resultado").innerHTML = rStatus;
+                            if(rStatus==='VALID'){
+                                document.getElementById('Resultado').style.backgroundColor = "#7CFC00";
+                            } else {
+                                document.getElementById('Resultado').style.backgroundColor = "red";
+                            }
+                            const endTime = Date.now();
+                            var elapsedTime= endTime - startTime;
+                            console.log("Tempo total: "+elapsedTime);
+                            document.getElementById("Tempo").innerHTML = elapsedTime+" milisegundos";
+                        }
+                        };
+                    //XHR2.addEventListener("load", (event) => {
+                    //    document.getElementById('Resultado').innerHTML="<p><b>Resultado consulta Token: "+event.target.responseText+"</b></p>";
+                    //});
+                    // Loop para esperar resposta
+                    var i = 0;
+                    const interval = 1;
+                    do {
+                        //document.wait(500);
+                        //XHR2.open("POST", "http://ec2-18-230-6-155.sa-east-1.compute.amazonaws.com/check", true);
+                        XHR2.open("POST", "http://[2600:1f1e:17b:e200:2c6:1dd4:35fe:ebea]/check", true);
+                        XHR2.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                        setTimeout(XHR2.send(data2), interval);
+                        i++;
+                        console.log("Esperou: "+(i*interval)+" milisegundos");
+                        console.log("Resultado: "+rStatus);
+                    } while ((rStatus === "UNK") && (i < 1000));
+                    });
+
+                    // Define what happens in case of error
+                    XHR.addEventListener("error", (event) => {
+                    alert('Opa! Alguma coisa deu errado.');
+                    });
+
+                    // Set up our request
+                    //XHR.open("POST", "http://ec2-18-230-6-155.sa-east-1.compute.amazonaws.com/send", true);
+                    XHR.open("POST", "http://[2600:1f1e:17b:e200:2c6:1dd4:35fe:ebea]/send", true);
+                    
+
+                    // The data sent is what the user provided in the form
+                    XHR.send(FD);
+
+                }
+
+                // Get the form element
+                const form = document.getElementById("myForm");
+
+                // Add 'submit' event handler
+                form.addEventListener("submit", (event) => {
+                    event.preventDefault();
+
+                    sendData();
+                });
+                });
+
+            </script>
+        
+    </body>
+</html>

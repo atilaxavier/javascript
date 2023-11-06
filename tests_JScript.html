@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="robots" content="noindex, nofollow">
+        
+        <title>Testes HTML5 - usando JavaScript</title>
+   
+    </head>
+
+    <body>
+        <p>
+            <h1>
+                <h4>Demo</h4>
+                <p>Informação sobre a sua conexão :</p>
+                <p>
+                <div id="demo-container">
+                    <div><label title="Type of connection a device is using to communicate with the network. It will be one of the following values: bluetooth, cellular, ethernet, none, wifi, wimax, other, unknown"><b>Network Type: </b></label><span id="network-type"></span></div>
+
+                    <div><label title="Effective type of the connection meaning one of 'slow-2g', '2g', '3g', or '4g'. This value is determined using a combination of recently observed round-trip time and downlink values.">Cellular Network Technology: </label><span id="effective-network-type"></span></div>
+
+                    <div><label title="Effective bandwidth estimate in megabits per second, rounded to the nearest multiple of 25 kilobits per seconds.">Current Downlink Speed: </label><span id="downlink-speed"></span></div>
+
+                    <div><label title="Maximum downlink speed, in megabits per second (Mbps), for the underlying connection technology.">Max Downlink Speed: </label><span id="max-downlink-speed"></span></div>
+
+                    <div><label title="Estimated effective round-trip time of the current connection, rounded to the nearest multiple of 25 milliseconds.">Round Trip Time: </label><span id="rtt-time"></span></div>
+
+                    <div><label title="True if the user has set a reduced data usage option on the user agent.">Save Data: </label><span id="saveData"></span></div>
+                </div>
+                </p>
+            </h1>
+        </p>
+
+        <script>
+                var net_type = navigator.connection.type;
+                //This network type will be one of following values : bluetooth, cellular, ethernet, none, wifi, wimax, other and unknown.
+                
+                //var effective_type = navigator.connection.effectiveType;
+                //This network type will be one of following values : slow-2g, 2g, 3g and 4g.
+                
+                //var downlink_max = navigator.connection.downlinkMax;
+                //maximum downlink speed of the network technology as megabits per second (Mb/s)
+
+                //var downlink = navigator.connection.downlink;
+                //effective real-time downlink speed experienced by the user. It is given in Mb/s
+
+                //var rtt = navigator.connection.rtt;
+                function updateNetInfo(){
+                    if(navigator.connection === undefined) {
+                        document.querySelector("#demo-container").innerHTML = 'Browser não suporta essa função. Tente com a última versão do Chrome';
+                    }
+                    else {
+                        net_type = navigator.connection.type;
+                        document.querySelector("#network-type").innerHTML = (net_type === undefined ? '<em><b>unknown</b></em>' : '<em><b>'+net_type+'</em></b>');
+                        document.querySelector("#effective-network-type").innerHTML = (navigator.connection.effectiveType === undefined ? '<em>unknown</em>' : navigator.connection.effectiveType);                      
+                        document.querySelector("#downlink-speed").innerHTML = (navigator.connection.downlink === undefined ? '<em>unknown</em>' : navigator.connection.downlink + ' mbps');
+                        document.querySelector("#max-downlink-speed").innerHTML = (navigator.connection.downlinkMax === undefined ? '<em>unknown</em>' : navigator.connection.downlinkMax + ' mbps');
+                        document.querySelector("#rtt-time").innerHTML = (navigator.connection.rtt === undefined ? '<em>unknown</em>' : navigator.connection.rtt + ' ms');
+                        document.querySelector("#saveData").innerHTML = (navigator.connection.saveData === undefined ? '<em>unknown</em>' : navigator.connection.saveData);
+                    }
+                }
+
+                navigator.connection.addEventListener('change', () => {
+	            // network change
+                    updateNetInfo();
+
+                });
+
+                window.addEventListener("load", () => {
+                    updateNetInfo();    
+                });
+            </script>      
+    </body>
+</html>

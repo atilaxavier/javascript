@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="robots" content="noindex, nofollow">
+        
+        <title>Sending forms through JavaScript - using_formdata_bound_to_a_form_element - code sample</title>    
+    </head>
+
+    <body>
+        
+        <form id="myForm">
+            <label for="myMSISDN">Escreva o seu numero:</label>
+            <input id="msisdn" name="msisdn" value="5521981135356" />
+            <input type="submit" value="OK!" />
+        </form>
+        <div id="Resposta"><p><b>Resposta chamada API (Token)...</b></p></div>
+        <div id="Resultado"><p><b>Resultado consulta Token...</b></p></div>
+        
+        
+        <script>
+                window.addEventListener("load", () => {
+                function sendData() {
+                    const XHR = new XMLHttpRequest();
+
+                    // Bind the FormData object and the form element
+                    const FD = new FormData(form);
+                    var rToken = new String;
+
+                    console.log("FD: "+FD);
+                    // Define what happens on successful data submission
+                    XHR.addEventListener("load", (event) => {
+                    rToken = event.target.responseText;
+                    //alert(event.target.responseText);
+                    document.getElementById('Resposta').innerHTML="<p><b>Resposta chamada API (Token): "+rToken+"</b></p>";
+
+                    // Agora vamos chamar a página que vai nos dar a resposta da InfoBip para o Token
+                    console.log("Token: "+rToken);
+                    const XHR2 = new XMLHttpRequest();
+
+                    //const data2 = JSON.stringify({ "token": rToken});
+                    const data2 = "token="+rToken;
+                    console.log("data2: "+data2);
+                    //const data2 = "token="+rToken;
+                    var rStatus = new String;
+                    XHR2.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            rStatus = this.responseText;
+                            console.log("Resultado: "+rStatus);
+                            document.getElementById("Resultado").innerHTML = "<p><b>Resultado consulta Token: "+rStatus+"</b></p>"
+                        }
+                        };
+                    //XHR2.addEventListener("load", (event) => {
+                    //    document.getElementById('Resultado').innerHTML="<p><b>Resultado consulta Token: "+event.target.responseText+"</b></p>";
+                    //});
+                    // Loop para esperar resposta
+                    var i = 0;
+                    const interval = 500;
+                    do {
+                        //document.wait(500);
+                        XHR2.open("POST", "http://ec2-18-230-6-155.sa-east-1.compute.amazonaws.com/check", true);
+                        XHR2.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                        setTimeout(XHR2.send(data2), interval);
+                        i++;
+                        console.log("Esperou: "+(i*interval)+" milisegundos");
+                        console.log("Resultado: "+rStatus);
+                    } while ((rStatus === "UNK") && (i < 5));
+                    });
+
+                    // Define what happens in case of error
+                    XHR.addEventListener("error", (event) => {
+                    alert('Opa! Alguma coisa deu errado.');
+                    });
+
+                    // Set up our request
+                    //XHR.open("POST", "https://example.com/cors.php");
+                    XHR.open("POST", "http://ec2-18-230-6-155.sa-east-1.compute.amazonaws.com/send", true);
+                    
+
+                    // The data sent is what the user provided in the form
+                    XHR.send(FD);
+
+                }
+
+                // Get the form element
+                const form = document.getElementById("myForm");
+
+                // Add 'submit' event handler
+                form.addEventListener("submit", (event) => {
+                    event.preventDefault();
+
+                    sendData();
+                });
+                });
+
+            </script>
+        
+    </body>
+</html>
